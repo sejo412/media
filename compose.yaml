@@ -1,0 +1,45 @@
+---
+networks:
+  media_network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
+      com.docker.network.bridge.name: "docker_media"
+services:
+  deluge:
+    image: lscr.io/linuxserver/deluge:latest
+    container_name: deluge
+    environment:
+      - PUID=2000
+      - PGID=2000
+      - TZ=Europe/Moscow
+      - DELUGE_LOGLEVEL=error
+    volumes:
+      - /opt/media/deluge/config:/config
+      - /opt/media/deluge/downloads:/downloads
+    ports:
+      - 8112:8112
+      - 6881:6881
+      - 6881:6881/udp
+      - 58846:58846
+    restart: unless-stopped
+    networks:
+      - media_network
+  samba:
+    image: ghcr.io/servercontainers/samba:latest
+    container_name: samba
+    environment:
+      - TZ=Europe/Moscow
+      - SAMBA_CONF_SERVER_STRING=Box
+    volumes: []
+    ports:
+      - 137:137/udp
+      - 138:138/udp
+      - 139:139/tcp
+      - 445:445/tcp
+    restart: unless-stopped
+    networks:
+      - media_network
+    cap_add:
+      - CAP_NET_ADMIN
+
